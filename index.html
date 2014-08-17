@@ -46,7 +46,7 @@
       define help [ "Demos available:" write
       "* test         rawrcat testcases and benchmarks" write
       "* randrect     splashes a bunch of rectangles on the screen" write
-      "* fibonnaci    show tracing of fibonnaci computations" write
+      "* fibonacci    show tracing of fibonnaci computations" write
       "* channels     show channels in RawrCat doing a calculation" write
       "* threading    show RawrCat concurrent performance" write
       "* help         shows this screen" write ]
@@ -61,10 +61,10 @@
                              [ pick_color draw_rand_box ] [ true ] while ]
 
 
-      ( *** fibonnaci/trace demo ****************************************** )
+      ( *** fibonacci/trace demo ****************************************** )
       define fib           [ dup 1 <= []
                               [ dup 1 - fib swap 2 - fib +] if ]
-      define fibonnaci     [ trace 5 fib ]
+      define fibonacci     [ trace 5 fib ]
 
 
       ( *** channels demo ************************************************* )
@@ -80,17 +80,17 @@
                                  #pong ->  ( get new current value from pong )
                                  dup "pong " + write ( report the new value ) ]
                                  [ dup 1024 lt ] while
-                                 stop_threads ]
+                                 stop-threads ]
 
 
       ( *** threading performance demo ************************************ )
       define threading    [ [ randrect ]
                               "randrect" nil thread
                             [ 2 [ 1 + dup 
-                                  dup "computing fibonnaci of " + write
+                                  dup "computing fibonacci of " + write
                                   fib
                                   "result is " + write ] forever ]
-                              "fibonnaci" nil thread ]
+                              "fibonacci" nil thread ]
 
       help
     </script>
