@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="css/jquery-ui.css">
+    <link rel="stylesheet" href="css/jquery.terminal.css">
+    <link rel="stylesheet" href="css/rawrcat.css">
+    <script src="vendor/jquery-1.11.0.js"></script>
+    <script src="vendor/jquery-ui-1.10.4.js"></script>
+    <script src="vendor/jquery.terminal-0.8.8.min.js"></script>
+    <script src="vendor/jquery.terminal.dterm.js"></script>
+    <title>RAWRCAT</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <script>
+    </script>
+  </head>
+ <style>
+ #menubox { position:relative; top:0; left:0; width: 200px; z-index:101; }
+ </style>
+  <body>
+    <div id="RCTerm"></div>
+    <canvas id="canvas" class="Canvas"></canvas>
+    <script>
+      var canvas = document.getElementById('canvas');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    </script>
+    <div id="menubox">
+      <ul id="menu">
+        <li><a id="OpenConsole" href="#">Console</a></li>
+      </ul>
+    </div>
+
+    <script>
+    $(function() {
+      $( "#menu" ).menu();
+    });
+    </script>
+
+    <script src="rawrcat.js"></script>
+    <script type="text/rawrcat">
+      "js/rawrterm.js" load_js
+      "RCTerm" 705 300 create_terminal
+
+      define help [ "Demos available:" write
+      "* test         rawrcat testcases and benchmarks" write
+      "* randrect     splashes a bunch of rectangles on the screen" write
+      "* fibonnaci    show tracing of fibonnaci computations" write
+      "* channels     show channels in RawrCat doing a calculation" write
+      "* threading    show RawrCat concurrent performance" write
+      "* help         shows this screen" write ]
+
+      ( *** randrect ****************************************************** )
+      define pick_color    [ 0 255 rand 0 255 rand 0 255 rand set_color ]
+      define draw_rand_box [ pick_color
+                             0 800 rand 0 600 rand
+                             0 800 rand 0 600 rand
+                             fill_rect ]
+      define randrect      [ "canvas" get_canvas
+                             [ pick_color draw_rand_box ] [ true ] while ]
+
+
+      ( *** fibonnaci/trace demo ****************************************** )
+      define fib           [ dup 1 <= []
+                              [ dup 1 - fib swap 2 - fib +] if ]
+      define fibonnaci     [ trace 5 fib ]
+
+
+      ( *** channels demo ************************************************* )
+      #ping create_channel
+      #pong create_channel
+      define channels      [ [ [ #ping -> ( block until read from #ping )
+                                 dup "ping " + write
+                                 2 *      ( do some math on fetched value )
+                                 #pong <- ( write mathed up value to #pong ) ]
+                                 forever ] nil nil thread
+
+                             2 [ #ping <-  ( write current value to ping )
+                                 #pong ->  ( get new current value from pong )
+                                 dup "pong " + write ( report the new value ) ]
+                                 [ dup 1024 lt ] while
+                                 stop_threads ]
+
+
+      ( *** threading performance demo ************************************ )
+      define threading    [ [ randrect ]
+                              "randrect" nil thread
+                            [ 2 [ 1 + dup 
+                                  dup "computing fibonnaci of " + write
+                                  fib
+                                  "result is " + write ] forever ]
+                              "fibonnaci" nil thread ]
+
+      help
+    </script>
+  </body>
+</html>
