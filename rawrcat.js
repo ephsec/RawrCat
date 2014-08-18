@@ -5,7 +5,7 @@
 // (c) Ephemeral Security 2014
 //
 // Licensed under the GPLv3 (http://www.gnu.org/copyleft/gpl.html)
-// ****************************************************************************
+// **************************************************************************** 
 
 // First, figure out if we're Node.JS or not, as we don't typically have a
 // DOM to interact with, and have some extra features not found in the browser
@@ -280,7 +280,7 @@ var rawrcat = function () {
     // context passed in, and push the temporay stack onto our original stack
     tempCtx.callbacks = [
       function(tempCtx) { 
-        if ( oldCtx.trace ) traceCtxState( tempCtx.stack, oldCtx );
+        oldCtx.trace && traceCtxState( tempCtx.stack, oldCtx );
         oldCtx.stack.push( tempCtx.stack );
         return(oldCtx)
       } ];
@@ -703,7 +703,7 @@ var rawrcat = function () {
     '==': words[ 'eq' ],
     '!=': words[ 'neq' ],
     '++': words[ 'inc' ],
-    '--': words[ 'dec' ],
+    '--': words[ 'dec' ]
   }
 
   for ( word in mathAlias ) {
@@ -768,15 +768,14 @@ var rawrcat = function () {
       return(null);
     }
 
-    var resolution = Number(ctx.resolution);
     while (true) {
-      ctx.nextTokenCount = 0;
+      ctx.nextTokenCount = 8000;
       execCount += 1
 
+      //var resolution = Number(ctx.resolution);
       var cb = ctx.callbacks.pop();
       if (null != cb) {
-          nextTokenCount = 0;
-          if ( ( execCount % resolution ) !== 0 ) {
+          if ( 0 !== execCount % ctx.resolution ) {
             // we call our callback function on the current context, assigning
             // the resulting context to `ctx`
             ctx = cb(ctx);
@@ -784,14 +783,12 @@ var rawrcat = function () {
             // need to stop execution and break out of our loop.
             if ( null == ctx ) break;
           } else {
-            if (!isNode) {
+            isNode
+              // We're Node.JS, so we use the much quicker nextTick primitive.
+              ? process.nextTick( function() { exec(cb(ctx)) } )
               // By default, nextTick calls setTimeout, but can be overriden
               // with other methods.
-              rawrEnv.nextTick( cb(ctx) );
-            } else {
-              // We're Node.JS, so we use the much quicker nextTick primitive.
-              process.nextTick( function() { exec(cb(ctx)) } );
-            }
+              : rawrEnv.nextTick( cb(ctx) );
             // As we're passing the context to a nextTick function, we break
             // on executing the current context, effectively passing control
             // to whatever picks up the context.
@@ -834,14 +831,14 @@ var rawrcat = function () {
     var token = ctx.tokens.pop();
     // To ensure that we don't hit a recursion depth limit when nextToken()
     // calls nextToken() directly for optimization reasons.
-    if ( ctx.nextTokenCount > 8000 ) {
+    if ( 0 === ctx.nextTokenCount ) {
       // We simply push ourself onto the callback queue, and return the context;
       // this causes a reset of the recursion depth, and we're right back
       // where we were when nextToken is called.
       ctx.callbacks.push( nextToken );
       return(ctx);
     } else {
-      ctx.nextTokenCount += 1;
+      --ctx.nextTokenCount;
     }
     if ( null != token ) {
       // We got a token when we pop()'ed the token stream.
@@ -849,11 +846,11 @@ var rawrcat = function () {
       // Local var declarations are faster than doing an object property lookup.
       var tokenType = token.tokenType;
       // If we have trace enabled, invoke the tracer on the current state.
-      if ( ctx.trace ) traceCtxState(token, ctx);
+      ctx.trace && traceCtxState(token, ctx);
       // The token in question is actually a native JavaScript function,
       // so we push nextToken onto the callback stream, and invoke the token
       // directly.
-      if ( typeof( token ) === "function" ) {
+      if ( "function" === typeof( token ) ) {
         ctx.callbacks.push( nextToken );
         return( token(ctx) );
       }
@@ -903,7 +900,6 @@ var rawrcat = function () {
   // shares many attributes of the calling context, but has its own token
   // stream.
   rawrEnv.executeQuotation = function(ctx, quotation) {
-    var origCtx = ctx;
     var newCtx = { stack: ctx.stack,
                    trace: ctx.trace,
                    depth: ctx.depth + 1,
@@ -919,38 +915,22 @@ var rawrcat = function () {
     // reasons; pop() is a lot faster than shift().  slice(0) ensures that
     // we're operating upon a copy of the quotation rather than a reference
     // to the quotation itself.
-    if ( quotation.isArray ) {
-      newCtx.tokens = quotation.slice(0).reverse();
-    } else {
-      newCtx.tokens = quotation.value.slice(0).reverse();
-    }
+    quotation.isArray
+      ? newCtx.tokens = quotation.slice(0).reverse()
+      : newCtx.tokens = quotation.value.slice(0).reverse();
 
-    if ( newCtx.trace ) traceCtxState( newCtx.tokens, newCtx, true);
+    newCtx.trace && traceCtxState( newCtx.tokens, newCtx, true);
 
-    // We levergae JavaScript closures in the following two functions.  This
-    // first function returns execution to the original quotation.
-    var returnOrigCtx = function (origCtx) {
-                              return(
-                                function( ctx ) { 
-                                  if ( newCtx.trace ) {
-                                    traceCtxState( newCtx.stack, origCtx,
-                                                   true );
-                                  }
-                                  return(origCtx) } ) };
-
-    // This function takes the new context created, with the generated token
-    // stream from the quotation, and switches execution to the new context.
-    var switchNewCtx = function(origCtx, newCtx) {
-                              return(
-                                function () {
-                                  var ctx = nextToken( newCtx );
-                                  return(ctx) } ) };
-
-    // We then sequence the three closures onto the callback stack, kicking
-    // things off with a nextToken.
-    newCtx.callbacks.push( returnOrigCtx(origCtx) );
-    newCtx.callbacks.push( function() { return( nextToken(newCtx) ); } )
-    newCtx.callbacks.push( switchNewCtx( origCtx, newCtx ) );
+    // We leverage JavaScript closures in the following two functions.  This
+    // first function pushed onto the callback stack returns execution to the
+    // original quotation.  Note that in all the following functions, we 
+    // ignore any arguments.
+    newCtx.callbacks.push( function() {
+                            newCtx.trace && traceCtxState( newCtx.stack, ctx,
+                                                           true );
+                            return(ctx) });
+    // We then switch to the new context by calling nextToken on it.
+    newCtx.callbacks.push( function() { return( nextToken(newCtx) ); } );
 
     // We return control to execute() which will then loop over the three
     // functions above that we pushed onto the callback stack.
