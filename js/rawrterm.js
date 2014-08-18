@@ -28,7 +28,7 @@ function RawrConsole() {
             title: "RawrTerm",
             name: 'rawrcat',
             prompt: '>> ',
-            history: 1000,
+            history: 1000
           });
 
         // Set our initial terminal size.
