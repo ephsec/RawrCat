@@ -13,7 +13,13 @@ RawrCat essentially turns an asynchronous callback environment in the browser in
 
 Jumping In
 ----------
-If you are someone who does not like reading documentation, simply git clone this repository and run a browser on `index.html` to see the demo code running in a JQuery terminal window.  If you use Chrome, you will need to disable Chrome's same-origin policy for local files, using the `--allow-file-access-from-files` flag, or serve the files up using a local web server.
+If you are someone who does not like reading documentation, you have three options:
+
+  * git clone this repository (`git clone https://github.com/ephsec/RawrCat.git`) and run a browser against `index.html`
+  * download the [zipfile of `master`](https://github.com/ephsec/RawrCat/archive/master.zip), unzip, and run a browser against `index.html`
+  * Or, you can go to the [Github Pages](http://ephsec.github.io/RawrCat/) site
+
+If you use Google Chrome, due to Chrome has an extremely restrictive same-origin policy that does not allow local files to use XMLHttpRequest() on a `file:///` url, you'll need to visit the Github Pages site or host it locally.  You can also use the `--allow-file-access-from-files` flag passed to Chrome, if you want it to be able to load `index.html` locally.
 
 A particularly good example of the concurrency in RawrCat is the `threading` demo.  It shows two threads running in a single threaded JavaScript VM, one computing the fibonacci sequence, and the other splashing random rectangles on a canvas behind the JQuery terminal window.  You will also notice that while these two threads are running, the `REPL` is still interactive and more functions and processes can be run.
 
