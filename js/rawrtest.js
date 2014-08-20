@@ -158,7 +158,7 @@ var rawrTest = function(rawrEnv) {
           return(ctx);
         }
 
-        runTest(ctx, parsedFn);
+        runTest(ctx, compiledFn);
       }
 
     var nextTest = function(ctx) {
