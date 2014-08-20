@@ -404,8 +404,9 @@ var rawrCompiler = function(rawrEnv) {
     for ( var tokenIdx=0; tokenIdx < tokens.length; tokenIdx++ ) {
       var token = tokens[ tokenIdx ];
       //console.log( rawrEnv.renderElement( token ) );
-      if ( token.tokenType === "RCQuotation" )  {
+      if ( token.tokenType === "RCQuotation" && token.compiled !== true )  {
         compiledToken = rawrEnv.compile( token );
+        compiledToken.compiled = true;
         token.value = compiledToken;
         outTokens.push( token );
       } else if ( token.tokenType === "RCFunction" ) {
