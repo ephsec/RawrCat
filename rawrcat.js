@@ -265,33 +265,26 @@ var rawrcat = function () {
   }
 
   function list(ctx) {
-    var oldCtx = ctx;
     var f = ctx.stack.pop();
-    // create a new context to evaluate our quotation within
-    ////// var tempCtx = createContext( oldCtx );
-
-    // turns out that it's quicker to manually set up our new context than it
-    // is to use createContext.
-    var tempCtx = { stack: [],
-                tokens: oldCtx.tokens,
-                callbacks: oldCtx.callbacks,
-                depth: oldCtx.depth,
-                resolution: oldCtx.resolution,
-                trace: oldCtx.trace,
-                terminal: oldCtx.terminal,
-                thread: oldCtx.thread,
-                nextTokenCount: oldCtx.nextTokenCount };
+    // We store our current stack in a temporary value, as we are
+    // going to be operating on an empty stack.  We used to create
+    // an entirely new context, but the overhead of that is expensive.
+    var oldStack = ctx.stack;
+    ctx.stack = [];
 
     // when we're done runnning our quotation, we revert back to the original
     // context passed in, and push the temporay stack onto our original stack
-    tempCtx.callbacks = [
-      function(tempCtx) { 
-        oldCtx.trace && traceCtxState( tempCtx.stack, oldCtx );
-        oldCtx.stack.push( tempCtx.stack );
-        return(oldCtx)
-      } ];
-    // finally, we run our function on the temporary constructed context
-    return( f(tempCtx) );
+    ctx.callbacks.push(
+      function(ctx) {
+        // We push the resulting stack onto the original stack, and
+        // replace the context's stack with the result.
+        oldStack.push( ctx.stack );
+        ctx.stack = oldStack;
+        ctx.trace && traceCtxState( ctx.stack, ctx );
+        return(ctx)
+      });
+    // finally, we run our function on the context with the empty stack
+    return( f(ctx) );
   }
 
   function fold(ctx) {
@@ -511,12 +504,9 @@ var rawrcat = function () {
                                    return(ctx); },
     'define': function(ctx) { var funcName = ctx.tokens.pop().value;
                               var compiledTokens = rawrEnv.compile(
-                                                            ctx.tokens.pop() );
-                              //var quotation = createQuotationFn(
-                              //                   ctx.tokens.pop() );
-                              //var quotation = ctx.tokens.pop();
+                                                          ctx.tokens.pop() );
                               words[ funcName ] = createQuotationFn(
-                                                        compiledTokens );
+                                                      compiledTokens );
                               return(ctx); },
     'get_canvas': function(ctx) {
                                var currCanvas = document.getElementById(
