@@ -222,7 +222,13 @@ var rawrcat = function () {
     var f = ctx.stack.pop();
     var t = ctx.stack.pop();
  
-    if (ctx.stack.pop()) { return(t(ctx)) } else { return(f(ctx)) };
+    return( ctx.stack.pop()
+              // true condition
+              ? t(ctx)
+              // false condition
+              : f(ctx) );
+
+    //if (ctx.stack.pop()) { return(t(ctx)) } else { return(f(ctx)) };
   }
 
   function cat_while(ctx) {
@@ -465,11 +471,6 @@ var rawrcat = function () {
     'repeat': function(ctx) { var n = ctx.stack.pop();
                               var f = ctx.stack.pop();
 
-                              //for (var i=0; i < n; i++) {
-                              //  f(ctx);
-                              //  ctx.callbacks.push( f );
-                              //};
-
                               var repeatFn = function(ctx) {
                                 return(
                                   0 < n--
@@ -479,13 +480,6 @@ var rawrcat = function () {
                                     // We no longer have more to do, return.
                                     : ctx );
                               };
-                              //  if ( n-- > 0 ) {
-                              //    ctx.callbacks.push( repeatFn );
-                              //    return( f(ctx) );
-                              //  } else {
-                              //    return( ctx );
-                              //  }
-                              //};
 
                               return( repeatFn(ctx) ) },
 
