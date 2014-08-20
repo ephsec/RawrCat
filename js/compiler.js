@@ -369,6 +369,7 @@ var rawrCompiler = function(rawrEnv) {
           if ( null != endToken ) {
             end = endToken.end;
           }
+          quotationTokens.reverse();
           return( RCQuotation( begin, end,
                                quotationTokens ) );
         }
@@ -377,6 +378,7 @@ var rawrCompiler = function(rawrEnv) {
           quotationTokens.push( parseQuotation( currToken.begin ) );
         } else if ( currToken.tokenType === "RCEndQuotation" ) {
           parserData.next();
+          quotationTokens.reverse();
           return( RCQuotation( begin, currToken.end, quotationTokens ) );
         } else {
           quotationTokens.push( currToken );

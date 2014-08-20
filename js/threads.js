@@ -29,7 +29,7 @@ var rawrThreads = function(rawrEnv) {
       var threadQuotation = ctx.stack.pop();
 
       var threadCtx = { stack: initialValues,
-                  tokens: rawrEnv.compile( threadQuotation.value ).reverse(),
+                  tokens: rawrEnv.compile( threadQuotation.value ),
                   callbacks: [ rawrEnv.nextToken ],
                   depth: 0,
                   resolution: ctx.resolution,

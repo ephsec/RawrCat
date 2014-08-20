@@ -53,8 +53,7 @@
 
       ( *** randrect ****************************************************** )
       define pick_color    [ 0 255 rand 0 255 rand 0 255 rand set_color ]
-      define draw_rand_box [ pick_color
-                             0 800 rand 0 600 rand
+      define draw_rand_box [ 0 800 rand 0 600 rand
                              0 800 rand 0 600 rand
                              fill_rect ]
       define randrect      [ "canvas" get_canvas

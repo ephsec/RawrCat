@@ -305,11 +305,13 @@ var rawrcat = function () {
         ctx.stack.push(init);
         var x = a[i];
         ctx.stack.push(x);
-        ctx.callbacks.push( function (ctx) {
+        ctx.callbacks.push( // push our while loop closure
+                            function (ctx) {
                               init = ctx.stack.pop();
                               --i;
-                              return( whileLoop(ctx) ); } );
-        ctx.callbacks.push( f );
+                              return( whileLoop(ctx) ); },
+                            // push function to execute
+                            f );
       }
       return(ctx);
     }
@@ -475,7 +477,9 @@ var rawrcat = function () {
                                 return(
                                   0 < n--
                                     // We still have more to do.
-                                    ? ( ctx.callbacks.push( repeatFn ),
+                                    ? ( // Repeat after invoking f()
+                                        ctx.callbacks.push( repeatFn ),
+                                        // Invoke f().
                                         f(ctx) )
                                     // We no longer have more to do, return.
                                     : ctx );
@@ -913,26 +917,25 @@ var rawrcat = function () {
                    thread: ctx.thread,
                    nextTokenCount: ctx.nextTokenCount };
 
-    // We turn the quotation into a token stream, reversed for performance
-    // reasons; pop() is a lot faster than shift().  slice(0) ensures that
+    // We turn the quotation into a token stream.  slice(0) ensures that
     // we're operating upon a copy of the quotation rather than a reference
     // to the quotation itself.
     quotation.isArray
-      ? newCtx.tokens = quotation.slice(0).reverse()
-      : newCtx.tokens = quotation.value.slice(0).reverse();
+      ? newCtx.tokens = quotation.slice(0)
+      : newCtx.tokens = quotation.value.slice(0);
 
     newCtx.trace && traceCtxState( newCtx.tokens, newCtx, true);
 
-    // We leverage JavaScript closures in the following two functions.  This
-    // first function pushed onto the callback stack returns execution to the
-    // original quotation.  Note that in all the following functions, we 
-    // ignore any arguments.
-    newCtx.callbacks.push( function() {
+    // We leverage JavaScript closures in the following two functions.
+    // Note that in all the following functions, we ignore any arguments.
+    newCtx.callbacks.push( // 2. Return execution to the original quotation.
+                           function() {
                             newCtx.trace && traceCtxState( newCtx.stack, ctx,
                                                            true );
-                            return(ctx) });
-    // We then switch to the new context by calling nextToken on it.
-    newCtx.callbacks.push( function() { return( nextToken(newCtx) ); } );
+                            return(ctx) },
+                           // 1. We switch to the new context by calling
+                           //    nextToken on it.
+                           function() { return( nextToken(newCtx) ); } );
 
     // We return control to execute() which will then loop over the three
     // functions above that we pushed onto the callback stack.
@@ -960,6 +963,7 @@ var rawrcat = function () {
           for (var i=0; i<element.value.length; i++) {
              quotationElements.push( renderElement( element.value[i] ) );
           }
+          quotationElements.reverse();
           return( "[" + quotationElements.join(" ") + "]" );
         case "RCStack":
           return( element.value );
