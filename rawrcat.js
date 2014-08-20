@@ -899,7 +899,12 @@ var rawrcat = function () {
     var newCtx = { stack: ctx.stack,
                    trace: ctx.trace,
                    depth: ctx.depth + 1,
-                   tokens: [],
+                   // We turn the quotation into a token stream.  slice(0)
+                   // ensures that we're operating upon a copy of the quotation
+                   // rather than a reference to the quotation itself.
+                   tokens: quotation.isArray
+                              ? quotation.slice(0)
+                              : quotation.value.slice(0),
                    callbacks: [],
                    executed: [],
                    resolution: ctx.resolution,
@@ -907,14 +912,7 @@ var rawrcat = function () {
                    thread: ctx.thread,
                    nextTokenCount: ctx.nextTokenCount };
 
-    // We turn the quotation into a token stream.  slice(0) ensures that
-    // we're operating upon a copy of the quotation rather than a reference
-    // to the quotation itself.
-    quotation.isArray
-      ? newCtx.tokens = quotation.slice(0)
-      : newCtx.tokens = quotation.value.slice(0);
-
-    newCtx.trace && traceCtxState( newCtx.tokens, newCtx, true);
+    newCtx.trace && traceCtxState( newCtx.tokens, newCtx, true );
 
     // We leverage JavaScript closures in the following two functions.
     // Note that in all the following functions, we ignore any arguments.
