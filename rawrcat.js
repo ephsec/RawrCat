@@ -471,13 +471,21 @@ var rawrcat = function () {
                               //};
 
                               var repeatFn = function(ctx) {
-                                if ( n-- > 0 ) {
-                                  ctx.callbacks.push( repeatFn );
-                                  return( f(ctx) );
-                                } else {
-                                  return( ctx );
-                                }
+                                return(
+                                  0 < n--
+                                    // We still have more to do.
+                                    ? ( ctx.callbacks.push( repeatFn ),
+                                        f(ctx) )
+                                    // We no longer have more to do, return.
+                                    : ctx );
                               };
+                              //  if ( n-- > 0 ) {
+                              //    ctx.callbacks.push( repeatFn );
+                              //    return( f(ctx) );
+                              //  } else {
+                              //    return( ctx );
+                              //  }
+                              //};
 
                               return( repeatFn(ctx) ) },
 
@@ -1140,7 +1148,7 @@ rawr = rawrcat();
 // compiler - compiler, tokenizer, parser module
 importJSLibrary("js/compiler.js");
 // rawrtick - improved yield/timeout over JS native setTimeout
-//importJSLibrary("rawrcat/rawrtick.js");
+//importJSLibrary("js/rawrtick.js");
 // threads - coroutine/threads
 importJSLibrary("js/threads.js");
 // channels - coroutine/thread communications 
