@@ -682,7 +682,26 @@ var rawrcat = function () {
                              ctx.stack.push(d);
                              ctx.stack.push(c);
                              ctx.stack.push(a);
-                             return(ctx); }
+                             return(ctx); },
+    'contains': function(ctx) { var a = ctx.stack.pop();
+                                if ( -1 !== ctx.stack.pop().indexOf(a) ) {
+                                  ctx.stack.push(true);
+                                } else {
+                                  ctx.stack.push(false);
+                                }
+                                return(ctx); },
+    'str_to_list': function(ctx) { var a = ctx.stack.pop();
+                                   ctx.stack.push( a.split("") );
+                                   return(ctx); },
+    'list_to_str': function(ctx) { var a = ctx.stack.pop();
+                                   ctx.stack.push( a.join("") );
+                                   return(ctx); },
+    'int_to_chr': function(ctx) { var a = ctx.stack.pop();
+                                  ctx.stack.push( String.fromCharCode(a) );
+                                  return(ctx); },
+    'chr_to_int': function(ctx) { var a = ctx.stack.pop();
+                                  ctx.stack.push( a.charCodeAt(0) );
+                                  return(ctx); }
   }
 
   // aliased functions as we can't self-refer in an initial setup of an object
@@ -768,7 +787,6 @@ var rawrcat = function () {
       ctx.nextTokenCount = 8000;
       execCount += 1
 
-      //var resolution = Number(ctx.resolution);
       var cb = ctx.callbacks.pop();
       if (null != cb) {
           if ( 0 !== execCount % ctx.resolution ) {
