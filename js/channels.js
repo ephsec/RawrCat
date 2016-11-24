@@ -28,12 +28,12 @@ var rawrChannels = function(rawrEnv) {
         var writerCtx = this.writers.shift();
         readerCtx.stack.push( writerCtx.stack.pop() );
         rawrEnv.exec( writerCtx );
-        return(readerCtx);
+        return( readerCtx );
       } else {
         channel.readers.push(readerCtx);
-        return(null);
+        return( null );
       }
-    }
+    };
 
     // When we write to a channel, we are taking the context of the writer,
     // popping a value off the stack, and adding it to the reader's stack.
@@ -51,18 +51,14 @@ var rawrChannels = function(rawrEnv) {
         channel.writers.push(writerCtx);
         return(null);
       }
-    }
+    };
 
     // check if there are any writers waiting to write to the channel;
     // this is useful to ensure that a reader does not block waiting for a
     // writer
     channel.checkWriters = function() {
-      if ( channel.writers.length > 0 ) {
-        return(true);
-      } else {
-        return(false);
-      }
-    }
+      return( ( channel.writers.length > 0 ) );
+    };
 
     // Flush out any pending reads and writes on a channel.
     channel.stop = function() {
@@ -177,39 +173,42 @@ var rawrChannels = function(rawrEnv) {
 
 
   var writeChSt = function(ctx) {
+    var workValue;
     var chSt = ctx.stack.pop();
-    if ( chSt.tokenType === "RCChannel" ) {
-      var channel = getChannel(chSt.value);
-      return( channel.write(ctx) );
-    } else if ( chSt.tokenType === "RCStack" ) {
-      var workValue = ctx.stack.pop();
-      var stack = getStack(chSt.value);
-      stack.push( workValue );
-      return( ctx );
-    } else if ( chSt.tokenType === "RCPubSub" ) {
-      var workValue = ctx.stack.pop();
-      var pubsub = getPubSub(chSt.value);
-      pubsub.publish( rawrEnv.clone(workValue) );
-      return( ctx );
+    switch( chSt.tokenType ) {
+      case "RCChannel":
+        var channel = getChannel(chSt.value);
+        return( channel.write(ctx) );
+      case "RCStack":
+        workValue = ctx.stack.pop();
+        var stack = getStack(chSt.value);
+        stack.push( workValue );
+        return( ctx );
+      case "RCPubSub":
+        workValue = ctx.stack.pop();
+        var pubsub = getPubSub(chSt.value);
+        pubsub.publish( rawrEnv.clone(workValue) );
+        return( ctx );
+      default:
+        throw( "InvalidTokenForWrite: " + chSt.value );
     }
-
-    throw( "InvalidTokenForWrite: " + chSt.value );
-  }
+  };
 
   var readChSt = function(ctx) {
     var chSt = ctx.stack.pop();
 
-    if ( chSt.tokenType === "RCChannel" ) {
-      var channel = getChannel(chSt.value);
-      return( channel.read(ctx) );
-    } else if ( chSt.tokenType === "RCStack" ) {
-      var stack = getStack(chSt.value);
-      ctx.stack.push( stack.pop() );
-      return( ctx )
+    switch( chSt.tokenType ) {
+      case "RCChannel":
+        var channel = getChannel(chSt.value);
+        return( channel.read(ctx) );
+      case "RCStack":
+        var stack = getStack(chSt.value);
+        ctx.stack.push( stack.pop() );
+        return( ctx );
+      default:
+        throw( "InvalidTokenForRead: " + chSt.value );
     }
-
-    throw( "InvalidTokenForRead: " + chSt.value );
-  }
+  };
 
   var createTrigger = function(ctx) {
     var quotation = ctx.stack.pop();
