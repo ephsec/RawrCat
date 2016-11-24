@@ -10,163 +10,154 @@ var rawrCompiler = function(rawrEnv) {
   // *************************************************************************
 
   var RCToken = function( tokenType, tokenBegin, tokenEnd, tokenValue ) {
-    tokenObj = new Object();
-    tokenObj.tokenType = tokenType;
-    tokenObj.begin = tokenBegin;
-    tokenObj.end = tokenEnd;
-    tokenObj.value = tokenValue;
-    return( tokenObj );
-  }
+    return( { tokenType: tokenType,
+              begin: tokenBegin,
+              end: tokenEnd,
+              value: tokenValue } );
+  };
 
   var RCWhiteSpace = function( tokenBegin, tokenEnd, tokenValue ) {
-    tokenObject = RCToken( "RCWhitespace", tokenBegin, tokenEnd, tokenValue );
-    return( tokenObject );
-  }
+    return( RCToken( "RCWhitespace", tokenBegin, tokenEnd, tokenValue ) )
+  };
 
   var RCComment = function( tokenBegin, tokenEnd, tokenValue ) {
-    tokenObject = RCToken( "RCComment", tokenBegin, tokenEnd, tokenValue );
-  }
+    return( RCToken( "RCComment", tokenBegin, tokenEnd, tokenValue ) )
+  };
 
   var RCString = function( tokenBegin, tokenEnd, tokenValue ) {
-    tokenObject = RCToken( "RCString", tokenBegin, tokenEnd, tokenValue );
-    return( tokenObject );
-  }
+    return( RCToken( "RCString", tokenBegin, tokenEnd, tokenValue ) )
+  };
 
   var RCFloat = function( tokenBegin, tokenEnd, tokenValue ) {
-    tokenObject = RCToken( "RCFloat", tokenBegin, tokenEnd, tokenValue );
-    return( tokenObject );
-  }
+    return( RCToken( "RCFloat", tokenBegin, tokenEnd, tokenValue ) )
+  };
 
   var RCInteger = function( tokenBegin, tokenEnd, tokenValue ) {
-    tokenObject = RCToken( "RCInteger", tokenBegin, tokenEnd, tokenValue );
-    return( tokenObject );
-  }
+    return( RCToken( "RCInteger", tokenBegin, tokenEnd, tokenValue ) )
+  };
 
   var RCBeginQuotation = function( tokenBegin, tokenEnd, tokenValue ) {
-    tokenObject = RCToken( "RCBeginQuotation", tokenBegin, tokenEnd,
-                                               tokenValue );
-    return( tokenObject );
-  }
+    return( RCToken( "RCBeginQuotation", tokenBegin, tokenEnd, tokenValue ) )
+  };
 
   var RCEndQuotation = function( tokenBegin, tokenEnd, tokenValue ) {
-    tokenObject = RCToken( "RCEndQuotation", tokenBegin, tokenEnd,
-                                             tokenValue );
-    return( tokenObject )
-  }
+    return( RCToken( "RCEndQuotation", tokenBegin, tokenEnd, tokenValue ) )
+  };
 
   var RCFunction = function( tokenBegin, tokenEnd, tokenValue ) {
-    tokenObject = RCToken( "RCFunction", tokenBegin, tokenEnd,
-                                         tokenValue );
-    return( tokenObject );
-  }
+    return( RCToken( "RCFunction", tokenBegin, tokenEnd, tokenValue ) );
+  };
 
   var RCQuotation = function( tokenBegin, tokenEnd, tokenValue ) {
-    tokenObject = RCToken( "RCQuotation", tokenBegin, tokenEnd,
-                                          tokenValue );
-    return( tokenObject );
-  }
+    return( RCToken( "RCQuotation", tokenBegin, tokenEnd, tokenValue ) )
+  };
 
   var RCChannel = function( tokenBegin, tokenEnd, tokenValue ) {
-    tokenObject = RCToken( "RCChannel", tokenBegin, tokenEnd,
-                                        tokenValue );
-    return ( tokenObject );
-  }
+    return( RCToken( "RCChannel", tokenBegin, tokenEnd, tokenValue ) )
+  };
 
   var RCStack = function( tokenBegin, tokenEnd, tokenValue ) {
-    tokenObject = RCToken( "RCStack", tokenBegin, tokenEnd,
-                                      tokenValue );
-    return ( tokenObject );
-  }
+    return( RCToken( "RCStack", tokenBegin, tokenEnd, tokenValue ) )
+  };
 
   var RCPubSub = function( tokenBegin, tokenEnd, tokenValue ) {
-    tokenObject = RCToken( "RCPubSub", tokenBegin, tokenEnd,
-                                       tokenValue );
-    return ( tokenObject );
-  }
+    return( RCToken( "RCPubSub", tokenBegin, tokenEnd, tokenValue ) )
+  };
 
   // *************************************************************************
   // Tokenizer state machine object
   // *************************************************************************
 
   var TokenizerData = function(input) {
-    dataObj = new Object();
+    var rawData = input;
+    var currPos = -1;
+    var tokens = [];
+    var currChr = "";
 
-    dataObj.rawData = input;
-    dataObj.currPos = -1;
-    dataObj.tokens = [];
-    dataObj.parsed = [];
-    dataObj.currChr = "";
+    var addToken = function(token) {
+      tokens.push(token);
+    };
 
-    dataObj.addToken = function(token) {
-      this.tokens.push(token);
-      // console.log( token.tokenType, token.tokenValue )
-    }
-
-    dataObj.next = function(num) {
+    var next = function(num) {
       if ( null == num ) {
         num = 1;
       }
-      this.currPos += num;
-      if ( this.currPos <= this.rawData.length ) {
-        this.currChr = this.rawData.charAt(this.currPos);
+      currPos += num;
+      if ( currPos <= rawData.length ) {
+        currChr = rawData.charAt(currPos);
       } else {
         throw("EndOfData");
       }
-    }
+    };
 
-    dataObj.peek = function() {
-      return(this.rawData.charAt(this.currPos+1));
-    }
+    var peek = function() {
+      return(rawData.charAt(dataObj.currPos+1));
+    };
 
-    dataObj.seek = function(idx) {
-      this.currPos = idx;
-      this.currChr = this.rawData.charAt(this.currPos);
-    }
+    var seek = function(idx) {
+      currPos = idx;
+      currChr = rawData.charAt(currPos);
+    };
 
-    dataObj.seekNext = function( chrs ) {
-      var nextChrPos = this.rawData.indexOf(chrs, this.currPos + 1);
+    var seekNext = function( chrs ) {
+      var nextChrPos = rawData.indexOf(chrs, currPos + 1);
       if ( nextChrPos < 0 ) { 
         throw("EndOfData");
       } else {
-        this.currPos = nextChrPos + chrs.length;
-        this.currChar = this.rawData.charAt(this.currPos);
+        currPos = nextChrPos + chrs.length;
+        currChr = rawData.charAt(dataObj.currPos);
       }
-    }
+    };
 
-    dataObj.posBeginWith = function( listStrings ) {
-      var chunk = this.rawData.slice( this.currPos, this.currPos + chunkSize );
-      for ( stringIdx in listStrings ) {
+    var posBeginWith = function( listStrings ) {
+      var chunk = rawData.slice( dataObj.currPos, dataObj.currPos + chunkSize );
+      for ( var stringIdx in listStrings ) {
         var compString = listStrings[ stringIdx ];
         if ( compString === chunk.slice( 0, compString.length ) ) {
-          this.next( compString.length );
+          next( compString.length );
           return( compString );
         }
       }
       return( null );
-    }
+    };
 
-    dataObj.getSlice = function( begin, end ) {
+    var getSlice = function( begin, end ) {
       var beginIsNull = ( null == begin );
       if ( beginIsNull ) {
-        return( this.rawData[ this.currPos ] );
+        return( rawData[ currPos ] );
       } else if ( ( !beginIsNull ) && ( null != end ) ) {
-        return( this.rawData.slice( begin, end ) )
+        return( rawData.slice( begin, end ) )
       } else {
-        return( this.rawData.charAt( begin ) )
+        return( rawData.charAt( begin ) )
       }
-    }
+    };
 
-    dataObj.insertSlice = function( sl, left, right ) {
-      this.rawData = [ this.rawData.slice(0, left), sl,
-                       this.rawData.slice(right,
-                                          this.rawData.length + 1) ].join()
-    }
+    var insertSlice = function( sl, left, right ) {
+      rawData = [ rawData.slice(0, left), sl,
+                  rawData.slice(right,
+                                rawData.length + 1) ].join()
+    };
+
+    var dataObj =  { addToken: addToken,
+                     next: next,
+                     peek: peek,
+                     seek: seek,
+                     seekNext: seekNext,
+                     posBeginWith: posBeginWith,
+                     getSlice: getSlice,
+                     insertSlice: insertSlice };
+
+    Object.defineProperties( dataObj, {
+      "currPos": { get: function () { return( currPos ) } },
+      "currChr": { get: function () { return( currChr ) } },
+      "tokens": { get: function () { return( tokens ) } }
+    });
 
     // initialize ourself before returning
-    dataObj.next()
+    dataObj.next();
 
     return(dataObj);
-  }
+  };
 
   // Tokenizes a given input string into a token state object
   rawrEnv.tokenize = function(inputData) {
@@ -208,11 +199,10 @@ var rawrCompiler = function(rawrEnv) {
         isStack = false;
         isPubSub = false;
       }
-    }
+    };
 
     try {
       while(true) {
-        //console.log( "CHR:", data.currChr );
         if ( rawrWhitespace.indexOf( data.currChr ) !== -1 ) {
           flushToken();
           beginStringIdx = data.currPos;
@@ -228,57 +218,68 @@ var rawrCompiler = function(rawrEnv) {
           //                                            endStringIdx ) ) );
         } else if ( data.currChr === '"' ) {
           flushToken();
-          beginStringIdx = data.currPos
-          endStringIdx = null
+          beginStringIdx = data.currPos;
+          endStringIdx = null;
           //var stringChr = data.currChr
           while( null == endStringIdx ) {
-            data.next()
+            data.next();
             if ( data.currChr === '"' ) {
-              data.next()
+              data.next();
               endStringIdx = data.currPos
             }
           }
           data.addToken( RCString( beginStringIdx, endStringIdx,
                                    data.getSlice( beginStringIdx+1,
                                                   endStringIdx-1 ).toString() ) );
-        } else if ( data.currChr === "(" ) {
-          flushToken();
-          beginCommentIdx = data.currPos;
-          endCommentIdx = null;
-          data.seekNext( ")" );
-          data.next();
-        } else if ( data.currChr === "[" ) {
-          flushToken();
-          quotationDepth += 1
-          data.addToken( RCBeginQuotation( data.currPos, data.currPos,
-                                           quotationDepth, "[" ) );
-          data.next()
-        } else if ( data.currChr === "]" ) {
-          flushToken();
-          if ( quotationDepth === 0 ) {
-            throw( "UnbalancedQuotation" )
-          }
-          data.addToken( RCEndQuotation( data.currPos, data.currPos,
-                                         quotationDepth, "]" ) );
-          quotationDepth -= 1
-          data.next()
-        } else if ( data.currChr === "#" ) {
-          flushToken();
-          isChannel = true;
-          data.next();
-        } else if ( data.currChr === "@" ) {
-          flushToken();
-          isStack = true;
-          data.next();
-        } else if ( data.currChr === "$" ) {
-          flushToken();
-          isPubSub = true;
-          data.next();
-        } else if ( null == tokenBegin ) {
-          tokenBegin = data.currPos
-          data.next()
         } else {
-          data.next()
+          switch ( data.currChr ) {
+            case "(":
+              flushToken();
+              beginCommentIdx = data.currPos;
+              endCommentIdx = null;
+              data.seekNext( ")" );
+              data.next();
+              break;
+            case "[":
+              flushToken();
+              quotationDepth += 1;
+              data.addToken( RCBeginQuotation( data.currPos, data.currPos,
+                  quotationDepth, "[" ) );
+              data.next();
+              break;
+            case "]":
+              flushToken();
+              if ( quotationDepth === 0 ) {
+                throw( "UnbalancedQuotation" );
+              }
+              data.addToken( RCEndQuotation( data.currPos, data.currPos,
+                  quotationDepth, "]" ) );
+              quotationDepth -= 1;
+              data.next();
+              break;
+            case "#":
+              flushToken();
+              isChannel = true;
+              data.next();
+              break;
+            case "@":
+              flushToken();
+              isStack = true;
+              data.next();
+              break;
+            case "$":
+              flushToken();
+              isPubSub = true;
+              data.next();
+              break;
+            default:
+              if ( null == tokenBegin ) {
+                tokenBegin = data.currPos;
+                data.next();
+              } else {
+                data.next();
+              }
+          }
         }
       }
     } catch (e) {
@@ -287,85 +288,93 @@ var rawrCompiler = function(rawrEnv) {
         if( quotationDepth > 0 ) {
           throw( "UnterminatedQuotation" )
         } else {
-          //console.log(data);
+          // console.log(data.tokens);
           return(data)
         }
       } else {
         throw( e )
       }
     }
-  }
+  };
 
 
   // *************************************************************************
   // Parser state machine object
   // *************************************************************************
   var ParserData = function(tokenData) {
-    dataObj = new Object();
-    dataObj.tokenizerData = tokenData;
-    dataObj.tokens = tokenData.tokens;
-    dataObj.currPos = -1;
-    dataObj.currToken = undefined;
+    var tokens = tokenData.tokens;
+    var currPos = -1;
+    var currToken = undefined;
 
-    dataObj.next = function( num ) {
+    var next = function( num ) {
       if ( null == num ) {
         num = 1;
       }
-      this.currPos += num;
-      if ( this.currPos <= this.tokens.length ) {
-        this.currToken = this.tokens[ this.currPos ];
+      currPos += num;
+      if ( currPos <= tokens.length ) {
+        currToken = tokens[ currPos ];
       } else {
         throw("EndOfData");
       }
-    }
+    };
 
-    dataObj.peek = function( num ) {
+    var peek = function( num ) {
       if ( null == num ) {
         num = 1;
       }
-      return( this.tokens[ this.currPos + num ] );
-    }
+      return( tokens[ currPos + num ] );
+    };
 
-    dataObj.seek = function( num ) {
+    var seek = function( num ) {
       if ( null == num ) {
         num = 0;
       }
-      this.currPos = num;
-      this.currToken = this.tokens[ this.currPos ];
-      return( this.currToken );
-    }
+      currPos = num;
+      currToken = tokens[ currPos ];
+      return( currToken );
+    };
 
-    dataObj.seekNext = function( tokenType ) {
+    var seekNext = function( tokenType ) {
       while( true ) {
-        if( this.currToken.tokenType === tokenType ) {
-          return( self.currPos );
+        if( currToken.tokenType === tokenType ) {
+          return( currPos );
         } else {
-          self.next();
+          next();
         }
       }
-    }
+    };
+
+    var dataObj = { next: next,
+                    peek: peek,
+                    seek: seek,
+                    seekNext: seekNext };
+
+    Object.defineProperties( dataObj, {
+      "currToken": { get: function () { return( currToken ) } },
+      "tokens": { get: function () { return( tokens ) } }
+    });
 
     // initialize before moving on
     dataObj.next();
     return( dataObj );
 
-  }
+  };
 
   // given an token state object, produce a quotation object suitable for
   // execution by the interpreter
   rawrEnv.parse = function(inputTokenData) {
     var parserData = ParserData(inputTokenData);
-    var parsed = null;
+    var parsed;
 
     var parseQuotation = function(begin) {
+      var currToken;
       var quotationTokens = [];
-      var currToken = null;
       var endToken = 0;
       var end = 0;
       while( true ) {
         currToken = parserData.currToken;
         if( typeof(currToken) === 'undefined' ) {
-          endToken = parserData.peek(-1)
+          endToken = parserData.peek(-1);
           if ( null != endToken ) {
             end = endToken.end;
           }
@@ -385,11 +394,11 @@ var rawrCompiler = function(rawrEnv) {
           parserData.next();
         }
       }
-    }
+    };
     parsed = parseQuotation(0);
     parsed.tokenCount = parserData.tokens.length;
     return( parsed );
-  }
+  };
 
   // optional compilation step that takes a quotation and recursively does
   // function call lookups, replacing RCFunction tokens with actual JavaScript
@@ -404,8 +413,9 @@ var rawrCompiler = function(rawrEnv) {
     for ( var tokenIdx=0; tokenIdx < tokens.length; tokenIdx++ ) {
       var token = tokens[ tokenIdx ];
       //console.log( rawrEnv.renderElement( token ) );
+
       if ( token.tokenType === "RCQuotation" && token.compiled !== true )  {
-        compiledToken = rawrEnv.compile( token );
+        var compiledToken = rawrEnv.compile( token );
         compiledToken.compiled = true;
         token.value = compiledToken;
         outTokens.push( token );
@@ -414,7 +424,7 @@ var rawrCompiler = function(rawrEnv) {
         if (func == null) {
           outTokens.push( token );
         } else {
-          func.value = token.value
+          func.value = token.value;
           outTokens.push( func );
         }
       } else {
@@ -422,10 +432,9 @@ var rawrCompiler = function(rawrEnv) {
       }
     }
     return( outTokens );
-  }
-
+  };
   return( rawrEnv );
-}
+};
 
 
 rawrCompiler(rawr);
