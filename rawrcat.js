@@ -618,11 +618,11 @@ var rawrcat = function () {
     'literal': function(ctx) { var litToken = ctx.tokens.pop();
                                ctx.stack.push( litToken );
                                return(ctx); },
-    'yieldn': function(ctx) { setTimeout(
-                              function () { rawrEnv.exec( ctx ); }, 0 );
+    'yieldn': function(ctx) { setImmediate(
+                              function () { rawrEnv.exec( ctx ); } );
                              return(null); },
-    'yield': function(ctx) { setTimeout(
-                              function () { rawrEnv.exec( ctx ); }, 0 );
+    'yield': function(ctx) { setImmediate(
+                              function () { rawrEnv.exec( ctx ); } );
                              return(null); },
     'time': function(ctx) { var dateInt = new Date().getTime();
                             dateInt.value = dateInt;
@@ -795,12 +795,13 @@ var rawrcat = function () {
             // need to stop execution and break out of our loop.
             if ( null == ctx ) break;
           } else {
-            isNode
+            // isNode
               // We're Node.JS, so we use the much quicker nextTick primitive.
-              ? process.nextTick( function() { exec(cb(ctx)) } )
+            //  ? process.nextTick( function() { exec(cb(ctx)) } )
               // By default, nextTick calls setTimeout, but can be overriden
               // with other methods.
-              : rawrEnv.nextTick( cb(ctx) );
+            //  : rawrEnv.nextTick( cb(ctx) );
+              setImmediate( function() { exec(cb(ctx))});
             // As we're passing the context to a nextTick function, we break
             // on executing the current context, effectively passing control
             // to whatever picks up the context.
@@ -1149,6 +1150,8 @@ var execCount = 0;
 //var resolution = 2500000;
 
 rawr = rawrcat();
+importJSLibrary("vendor/setImmediate.js");
+
 // compiler - compiler, tokenizer, parser module
 importJSLibrary("js/compiler.js");
 // rawrtick - improved yield/timeout over JS native setTimeout
