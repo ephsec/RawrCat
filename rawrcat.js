@@ -10,11 +10,7 @@
 // First, figure out if we're Node.JS or not, as we don't typically have a
 // DOM to interact with, and have some extra features not found in the browser
 // Javascript engines.
-if (typeof module !== 'undefined' && module.exports) {
-  isNode = true;
-} else {
-  isNode = false;
-}
+isNode = !!(typeof module !== 'undefined' && module.exports);
 
 // Method to support various mechanisms to load a library depending on
 // environment.
@@ -70,7 +66,7 @@ OrderedHash = function(inputPairs) {
       keys.push(k);
     }
     vals[k] = v;
-  }
+  };
 
   orderedHash.objects = vals;
   orderedHash.length = function() { return keys.length };
@@ -80,14 +76,14 @@ OrderedHash = function(inputPairs) {
     retVals = [];
     for (var i=0; i<keys.length; i++) {
       retVals.push( vals[ keys[i] ] );
-    };
+    }
     return(retVals);
   };
   orderedHash.keyvals = function() {
     retKeyVals = [];
     for (var i=0; i<keys.length; i++) {
       retKeyVals.push( [ keys[i], vals[ keys[i] ] ] );
-    };
+    }
     return(retKeyVals);
   };
   orderedHash.contains = function(k) {
@@ -99,19 +95,23 @@ OrderedHash = function(inputPairs) {
   orderedHash.rm = function(k) {
     keys.splice( keys.indexOf(k) );
     delete vals[k];
-  }
+  };
   orderedHash.toJS = function() {
     return( vals );
   };
   orderedHash.keyPush = function(k, v) {
     vals[k].push(v);
-  }
+  };
   orderedHash.exists = function(k) {
-    return( vals )
-  }
+    if ( null !== vals[k] ) {
+        return(true);
+    } else {
+        return(false);
+    }
+  };
   orderedHash.clone = function() {
     return( OrderedHash( orderedHash.keyvals() ) );
-  }
+  };
   if ( inputPairs.length > 0 ) {
     for (var i=0; i<inputPairs.length; i++) {
       orderedHash.push(inputPairs[i][0], inputPairs[i][1])   
@@ -125,7 +125,7 @@ OrderedHash = function(inputPairs) {
   }
   orderedHash.tokenType = "RCHash";
   return( orderedHash );
-}
+};
 
 // ****************************************************************************
 // Core RawrCat interpreter and primitives
@@ -136,7 +136,7 @@ var rawrcat = function () {
   // can be instantiated in this fashion, although currently RawrCat extensions
   // under 'js/' assume that they are extending a 'rawr' object in the
   // global namespace.
-  var rawrEnv = new Object();
+  var rawrEnv = {};
 
   // A more sane way to instantiate object copies
   function clone(o) {
@@ -155,7 +155,7 @@ var rawrcat = function () {
   // Default nextTick is setTimeout but can be overriden.
   rawrEnv.nextTick = function( ctx ) {
     setTimeout( function () { rawrEnv.exec(ctx) }, 0 );
-  }
+  };
 
   // **************************************************************************
   // RawrCat primitives
@@ -164,7 +164,7 @@ var rawrcat = function () {
   // All RawrCat language primitives at the JavaScript level accept a context
   // object 'ctx', manipulate the context, and return the altered 'ctx' object
   // to the calling function.
-  // 
+  //
   // Typically, a number of items are popped off the stack contained in the
   // context, and optionally, results are pushed back onto the stack.
   //
@@ -203,7 +203,7 @@ var rawrcat = function () {
     var y = ctx.stack.pop();
     var f = function (ctx) {
       return(y(x(ctx)));
-    }
+    };
     f.value = [ y, x ];
     f.tokenType = "RCQuotation";
     ctx.stack.push( f );
@@ -221,7 +221,7 @@ var rawrcat = function () {
   function cat_if(ctx) {
     var f = ctx.stack.pop();
     var t = ctx.stack.pop();
- 
+
     return( ctx.stack.pop()
               // true condition
               ? t(ctx)
@@ -239,7 +239,7 @@ var rawrcat = function () {
       ctx.callbacks.push( checkConditional );
       ctx.callbacks.push( b );
       return(ctx);
-    }
+    };
 
     var checkConditional = function(ctx) {
       if ( ctx.stack.pop() ) {
@@ -247,7 +247,7 @@ var rawrcat = function () {
         ctx.callbacks.push( f );
       }
       return(ctx);
-    }
+    };
 
     return(whileLoop(ctx));
   }
@@ -258,7 +258,7 @@ var rawrcat = function () {
     var foreverLoop = function(ctx) {
       ctx.callbacks.push( foreverLoop );
       return(f(ctx));
-    }
+    };
 
     return(foreverLoop(ctx));
 
@@ -307,7 +307,7 @@ var rawrcat = function () {
                             f );
       }
       return(ctx);
-    }
+    };
 
     ctx.callbacks.push( function (ctx) {
                           ctx.stack.push( init );
@@ -330,7 +330,7 @@ var rawrcat = function () {
                             return( forEachLoop(ctx)); } );
       ctx.callbacks.push( f );
       return(ctx);
-    }
+    };
 
     return( forEachLoop(ctx) );
   }
@@ -338,9 +338,9 @@ var rawrcat = function () {
   function load_js(ctx) {
     var library = ctx.stack.pop();
 
-    console.log( "Loading JavaScript file: " + library )
+    console.log( "Loading JavaScript file: " + library );
     if (typeof window == 'undefined') {
-      require("./" + library)
+      require("./" + library);
       return(ctx);
     } else {
       function responseIntoDOM(ctx) {
@@ -372,7 +372,6 @@ var rawrcat = function () {
   // context rather than calling the push and pop primitives; this is due to
   // function call coherency issues.
   var words = {
-    'pop': pop,
     'dup': dup,
     'compose': compose,
     'quote': quote,
@@ -431,8 +430,7 @@ var rawrcat = function () {
                           return(ctx); },
     'count': function(ctx) { ctx.stack.push( peek(ctx).length );
                              return(ctx); },
-    'apply': function(ctx) { x = ctx.stack.pop()
-                             return( x(ctx) ) },
+    'apply': function(ctx) { return( ctx.stack.pop()(ctx) ) },
     'inc': function(ctx) { ctx.stack.push( ctx.stack.pop() + 1 );
                            return(ctx); },
     'dec': function(ctx) { ctx.stack.push( ctx.stack.pop() - 1 );
@@ -444,7 +442,7 @@ var rawrcat = function () {
                            //return(ctx); },
                            ctx.callbacks.push(
                              function(ctx) {ctx.stack.push(x);
-                                            return(ctx); } )
+                                            return(ctx); } );
                            //ctx = f(ctx)
                            return( f(ctx) ); },
     'pop': function(ctx) { --ctx.stack.length;
@@ -457,7 +455,7 @@ var rawrcat = function () {
                             return(ctx); },
     'and': function(ctx) { var b = ctx.stack.pop();
                            if (ctx.stack.pop()) {ctx.stack.push( b )}
-                           else {ctx.stack.push( false )};
+                           else {ctx.stack.push( false );}
                            return(ctx); },
     'unit': function(ctx) { var xs = [];
                             xs.push(ctx.stack.pop());
@@ -510,8 +508,8 @@ var rawrcat = function () {
                               return(ctx); },
     'get_canvas': function(ctx) {
                                var currCanvas = document.getElementById(
-                                                  ctx.stack.pop() )
-                               var currContext = currCanvas.getContext("2d")
+                                                  ctx.stack.pop() );
+                               var currContext = currCanvas.getContext("2d");
                                ctx.stack.push( currContext );
                                return(ctx); },
     'set_color': function(ctx) { var b = ctx.stack.pop();
@@ -581,7 +579,7 @@ var rawrcat = function () {
                                      }
                                      return(ctx); },
     'hash_contains': function(ctx) { var key = ctx.stack.pop();
-                                     var hash = ctx.stack.pop(); 
+                                     var hash = ctx.stack.pop();
                                      ctx.stack.push(hash);
                                      if ( hash.contains( key ) ) {
                                       ctx.stack.push(true);
@@ -626,7 +624,7 @@ var rawrcat = function () {
     'yield': function(ctx) { setTimeout(
                               function () { rawrEnv.exec( ctx ); }, 0 );
                              return(null); },
-    'time': function(ctx) { var dateInt = new Date().getTime()
+    'time': function(ctx) { var dateInt = new Date().getTime();
                             dateInt.value = dateInt;
                             ctx.stack.push( dateInt );
                             return(ctx); },
@@ -702,7 +700,7 @@ var rawrcat = function () {
     'chr_to_int': function(ctx) { var a = ctx.stack.pop();
                                   ctx.stack.push( a.charCodeAt(0) );
                                   return(ctx); }
-  }
+  };
 
   // aliased functions as we can't self-refer in an initial setup of an object
   var mathAlias = {
@@ -719,9 +717,9 @@ var rawrcat = function () {
     '!=': words[ 'neq' ],
     '++': words[ 'inc' ],
     '--': words[ 'dec' ]
-  }
+  };
 
-  for ( word in mathAlias ) {
+  for ( var word in mathAlias ) {
     words[ word ] = mathAlias[ word ];
   }
 
@@ -748,7 +746,7 @@ var rawrcat = function () {
     }
 
     return( ctx );
-  }
+  };
   rawrEnv.createContext = createContext;
 
   // **************************************************************************
@@ -763,7 +761,7 @@ var rawrcat = function () {
     var parsed = rawrEnv.parse( tokenized );
     tokenCount = 0;
     if ( parsed.value ) {
-      //var initialQuotation = function() { 
+      //var initialQuotation = function() {
       //  return( rawrEnv.executeQuotation.bind( null, ctx, parsed ) );
       //}
       //console.log( Object.keys( initialQuotation ) );
@@ -772,7 +770,7 @@ var rawrcat = function () {
       //console.log(ctx);
       exec(ctx);
     }
-  }
+  };
 
   // **************************************************************************
   // Core RawrCat execution loop
@@ -785,7 +783,7 @@ var rawrcat = function () {
 
     while (true) {
       ctx.nextTokenCount = 8000;
-      execCount += 1
+      execCount += 1;
 
       var cb = ctx.callbacks.pop();
       if (null != cb) {
@@ -824,15 +822,15 @@ var rawrcat = function () {
   var createQuotationFn = function(token) {
     var qnFn = function(ctx) {
       return( rawrEnv.executeQuotation( ctx, token ) );
-    }
-    qnFn.value = token
+    };
+    qnFn.value = token;
     return(qnFn);
-  }
+  };
   rawrEnv.createQuotationFn = createQuotationFn;
 
   // The heart and soul of the execution cycle of RawrCat -- given a context,
   // a token is popped off the token stream, and evaluated based on the token
-  // type.  Continued execution is ensured by injecting nextToken into the 
+  // type.  Continued execution is ensured by injecting nextToken into the
   // callback stream; when the token completes being evaluated, nextToken
   // is automatically called by the main execution loop that goes through
   // the callbacks.
@@ -905,8 +903,7 @@ var rawrcat = function () {
     } else {
       return(ctx);
     }
-    return(ctx);
-  }
+  };
   rawrEnv.nextToken = nextToken;
 
   // Our outer interpreter that starts execution, given a quotation.  A
@@ -946,7 +943,7 @@ var rawrcat = function () {
     // We return control to execute() which will then loop over the three
     // functions above that we pushed onto the callback stack.
     return(newCtx);
-  }
+  };
 
   // **************************************************************************
   // rendering routines to turn stack, tokens, and elements into strings
@@ -987,7 +984,7 @@ var rawrcat = function () {
       return( renderElement( element.value ) );
     } else if ( element.tokenType == "RCHash" ) {
       var keyvals = element.keyvals();
-      var hashStrings = []
+      var hashStrings = [];
       for (var i=0; i<keyvals.length; i++) {
         hashStrings.push( "[" + renderElement(keyvals[i][0]) + " " +
           renderElement(keyvals[i][1]) + "] list" );
@@ -1007,7 +1004,7 @@ var rawrcat = function () {
     if ( topIsNotList ) {
       return( "[" + reportSt.join( " " ) + "]" );
     } else if ( reportSt.length > 2 ) {
-      return( "[" + reportSt.join( " " ) + "] list" ); 
+      return( "[" + reportSt.join( " " ) + "] list" );
     } else if ( reportSt.length === 2 ) {
       return( reportSt.join( " ") + " pair" );
     } else if ( reportSt.length === 1 ) {
@@ -1015,7 +1012,7 @@ var rawrcat = function () {
     } else {
       return( "nil" )
     }
-  }
+  };
   rawrEnv.renderElement = renderElement;
 
   // given the current 'token' and context, render it into a human repesentable
@@ -1025,10 +1022,11 @@ var rawrcat = function () {
       return
     }
 
+    var screenWidth;
     if (null != ctx.terminal) {
-      var screenWidth = ctx.terminal.cols;
+      screenWidth = ctx.terminal.cols;
     } else {
-      var screenWidth = 160;
+      screenWidth = 160;
     }
 
     var threadStr = '';
@@ -1049,7 +1047,7 @@ var rawrcat = function () {
     // begin our sizing calculations
     var rtIndent = Math.ceil( screenWidth * midPointPercent )
                       - midPointString.length;
-    var tokenCountLen = tokenCount.toString().length
+    var tokenCountLen = tokenCount.toString().length;
     if ( tokenCountLen < minCountWidth ) {
       tokenCountLen = minCountWidth;
     }
@@ -1063,36 +1061,38 @@ var rawrcat = function () {
     var tokensRender = renderElement(ctx.tokens, true).toString();
     var tokenRender = renderElement(token, true).toString();
 
+    var tokensMaxWidth;
+    var tokenMaxWidth;
     if ( showNoToken === true ) {
-      var tokensMaxWidth = rtIndent - reportStr.length
-                                    - midPointString.length
-                                    - paddingLength;
+      tokensMaxWidth = rtIndent - reportStr.length
+                                - midPointString.length
+                                - paddingLength;
     } else if ( ( tokensRender.length + tokenRender.length )
                 > ( rtIndent - reportStr.length - ( paddingLength * 2 ) ) ) {
       if ( tokenRender.length > ( ( rtIndent - reportStr.length ) / 2 ) ) {
-        var tokenMaxWidth = ( rtIndent - reportStr.length ) / 2
-                              - ellideString.length
-                              - spacer.length
-        var tokensMaxWidth = ( rtIndent - reportStr.length ) / 2
-                              - ellideString.length
-                              - paddingLength
-                              - spacer.length
+        tokenMaxWidth = ( rtIndent - reportStr.length ) / 2
+                         - ellideString.length
+                         - spacer.length;
+        tokensMaxWidth = ( rtIndent - reportStr.length ) / 2
+                         - ellideString.length
+                         - paddingLength
+                         - spacer.length;
       } else {
-        var tokenMaxWidth = tokenRender.length
-        var tokensMaxWidth = rtIndent - reportStr.length
-                                      - tokenMaxWidth
-                                      - ellideString.length
-                                      - paddingLength
-                                      - spacer.length
+        tokenMaxWidth = tokenRender.length;
+        tokensMaxWidth = rtIndent - reportStr.length
+                                  - tokenMaxWidth
+                                  - ellideString.length
+                                  - paddingLength
+                                  - spacer.length;
       }
     } else {
-      var tokenMaxWidth = tokenRender.length
-      var tokensMaxWidth = tokensRender.length
+      tokenMaxWidth = tokenRender.length;
+      tokensMaxWidth = tokensRender.length;
     }
 
     if ( ( tokenRender.length ) > tokenMaxWidth ) {
-      tokenRender = tokenRender.slice( 0, tokenMaxWidth ) + spacer 
-                                                          + ellideString
+      tokenRender = tokenRender.slice( 0, tokenMaxWidth ) + spacer
+                                                          + ellideString;
     }
 
     if ( ( tokensRender.length ) > tokensMaxWidth ) {
@@ -1104,7 +1104,7 @@ var rawrcat = function () {
                                                         tokensRender.length );
     }
 
-    reportStr += "| " + tokensRender
+    reportStr += "| " + tokensRender;
 
     if ( showNoToken === true ) {
       reportStr += Array(rtIndent
@@ -1118,27 +1118,27 @@ var rawrcat = function () {
       reportStr += tokenRender;
     }
 
-    reportStr +=  midPointString
+    reportStr +=  midPointString;
     var renderedStack = renderElement( clone(ctx.stack).reverse(),
                                        true ).toString();
     if ( renderedStack.length + reportStr.length > screenWidth ) {
       renderedStack = renderedStack.slice( 0, screenWidth - reportStr.length
                                                           - ellideString.length
-                                                          - spacer.length )
-      renderedStack += spacer + ellideString
-    };
-    reportStr += renderedStack
+                                                          - spacer.length );
+      renderedStack += spacer + ellideString;
+    }
+    reportStr += renderedStack;
 
     console.log( reportStr );
-  }
+  };
 
   // render the stack into a string
   rawrEnv.renderStack = function(stack) {
     return( renderElement( stack ) )
-  }
+  };
 
   return(rawrEnv);
-}
+};
 
 // ****************************************************************************
 // Initialization and bootstrap of RawrCat
