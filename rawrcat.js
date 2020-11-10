@@ -74,14 +74,14 @@ OrderedHash = function(inputPairs) {
   orderedHash.val = function(k) { return vals[k] };
   orderedHash.vals = function() {
     retVals = [];
-    for (var i=0; i<keys.length; i++) {
+    for ( var i=0; i<keys.length; i++ ) {
       retVals.push( vals[ keys[i] ] );
     }
     return(retVals);
   };
   orderedHash.keyvals = function() {
     retKeyVals = [];
-    for (var i=0; i<keys.length; i++) {
+    for ( var i=0; i<keys.length; i++ ) {
       retKeyVals.push( [ keys[i], vals[ keys[i] ] ] );
     }
     return(retKeyVals);
@@ -113,11 +113,11 @@ OrderedHash = function(inputPairs) {
     return( OrderedHash( orderedHash.keyvals() ) );
   };
   if ( inputPairs.length > 0 ) {
-    for (var i=0; i<inputPairs.length; i++) {
+    for ( var i=0; i<inputPairs.length; i++ ) {
       orderedHash.push(inputPairs[i][0], inputPairs[i][1])   
     }
   } else if ( typeof( inputPairs ) === 'object' ) {
-    for ( key in inputPairs ) {
+    for ( var key in inputPairs ) {
       if ( inputPairs.hasOwnProperty( key ) ) {
         orderedHash.push( key, inputPairs[ key ] )
       }
@@ -594,7 +594,7 @@ var rawrcat = function () {
                                                     + renderElement(element));
                                           return(ctx); } ) }
 
-                                    for (var i=0;i<=ctx.stack.length-1;i++) {
+                                    for ( var i=0;i<=ctx.stack.length-1;i++ ) {
                                       var element = ctx.stack[i];
                                       ctx.callbacks.push( stackElementPrinter(i,
                                         element) );
@@ -634,9 +634,9 @@ var rawrcat = function () {
     'chunk_list': function(ctx) { var i, j, chunk;
                                   var chunkSize = ctx.stack.pop();
                                   var listToChunk = ctx.stack.pop();
-                                  for (i = 0, j = listToChunk.length;
-                                       i < j;
-                                       i += chunkSize) {
+                                  for ( var i = 0, j = listToChunk.length;
+                                        i < j;
+                                        i += chunkSize) {
                                     chunk = listToChunk.slice(i, i + chunkSize);
                                     ctx.stack.push( chunk ); }
                                   return(ctx); },
@@ -740,7 +740,7 @@ var rawrcat = function () {
                 nextTokenCount: 0 };
 
     if ( params != null ) {
-      for ( attribute in params ) {
+      for ( var attribute in params ) {
         ctx[ attribute ] = params[ attribute ]
       }
     }
@@ -964,7 +964,7 @@ var rawrcat = function () {
           return( element.value );
         case "RCQuotation":
           var quotationElements = [];
-          for (var i=0; i<element.value.length; i++) {
+          for ( var i=0; i<element.value.length; i++ ) {
              quotationElements.push( renderElement( element.value[i] ) );
           }
           quotationElements.reverse();
@@ -986,7 +986,7 @@ var rawrcat = function () {
     } else if ( element.tokenType == "RCHash" ) {
       var keyvals = element.keyvals();
       var hashStrings = [];
-      for (var i=0; i<keyvals.length; i++) {
+      for ( var i=0; i<keyvals.length; i++ ) {
         hashStrings.push( "[" + renderElement(keyvals[i][0]) + " " +
           renderElement(keyvals[i][1]) + "] list" );
       }
@@ -998,7 +998,7 @@ var rawrcat = function () {
       return( element );
     }
     var reportSt = [];
-    for (var x=0; x < element.length; x++) {
+    for ( var x=0; x < element.length; x++ ) {
       var subElement = element[x];
       reportSt.push( renderElement( subElement ) );
     }
@@ -1194,7 +1194,7 @@ if (isNode) {
   // as a list of strings.
   function findLang(scripts, scriptType) {
     var code = [];
-    for (var i=0; i<scripts.length; ++i) {
+    for ( var i=0; i<scripts.length; ++i ) {
       if (scripts[i].type.toLowerCase()==scriptType) {
         code.push(scripts[i].text);
       }
@@ -1209,7 +1209,7 @@ if (isNode) {
     if (scripts.length > 0) {
       var scriptParentNode = scripts[0].parentNode;
       var code = findLang(scripts, scriptType);
-      for (var i=0; i<code.length; ++i) {
+      for ( var i=0; i<code.length; ++i ) {
         callback(code[i]);
       }
     }

@@ -97,7 +97,7 @@ var rawrTest = function(rawrEnv) {
       var testsToDo = [];
 
       if ( null == testCase ) {
-        for ( test in testCases ) {
+        for ( var test in testCases ) {
           testsToDo.push( test ); 
         }
         testsToDo.reverse();
