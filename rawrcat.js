@@ -1150,20 +1150,30 @@ var execCount = 0;
 //var resolution = 2500000;
 
 rawr = rawrcat();
-importJSLibrary("vendor/setImmediate.js");
 
-// compiler - compiler, tokenizer, parser module
-importJSLibrary("js/compiler.js");
-// rawrtick - improved yield/timeout over JS native setTimeout
-//importJSLibrary("js/rawrtick.js");
-// threads - coroutine/threads
-importJSLibrary("js/threads.js");
-// channels - coroutine/thread communications 
-importJSLibrary("js/channels.js");
-// rawtest - test cases
-importJSLibrary("js/rawrtest.js");
-// rpc - rpc to a remote rawrcat server
-importJSLibrary("js/rpc.js");
+if(typeof __NJS_ENV !== 'undefined') {
+  require("./vendor/setImmediate.js")
+  require("./js/compiler.js")
+  require("./js/threads.js")
+  require("./js/channels.js")
+  require("./js/rawrtest.js")
+  require("./js/rpc.js")
+} else {
+  importJSLibrary("vendor/setImmediate.js");
+  // compiler - compiler, tokenizer, parser module
+  importJSLibrary("js/compiler.js");
+  // rawrtick - improved yield/timeout over JS native setTimeout
+  //importJSLibrary("js/rawrtick.js");
+  // threads - coroutine/threads
+  importJSLibrary("js/threads.js");
+  // channels - coroutine/thread communications
+  importJSLibrary("js/channels.js");
+  // rawtest - test cases
+  importJSLibrary("js/rawrtest.js");
+  // rpc - rpc to a remote rawrcat server
+  importJSLibrary("js/rpc.js");
+}
+
 
 
 // Our REPL functions for node.js
